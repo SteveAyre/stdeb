@@ -12,6 +12,9 @@ def main():
     parser.add_option('--release', type='str',
                       help='specify a particular release',
                       default=None)
+    parser.add_option('--latest-release', action='store_true',
+                      default=False,
+                      help='use the latest release if several are available')
     parser.add_option('--allow-unsafe-download', action='store_true',
                       default=False,
                       help='allow unsafe downloads')
@@ -24,7 +27,7 @@ def main():
     package_name = args[0]
 
     tarball_fname = get_source_tarball(package_name,verbose=options.verbose,
-                                       release=options.release,
+                                       release=options.release, latest_release=options.latest_release,
                                        allow_unsafe_download=options.allow_unsafe_download)
     myprint('OK: %s' % tarball_fname)
 

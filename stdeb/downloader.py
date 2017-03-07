@@ -12,13 +12,14 @@ import hashlib
 import warnings
 import stdeb
 from stdeb.transport import RequestsTransport
+from distutils.version import StrictVersion
 
 myprint=print
 
 USER_AGENT = 'pypi-install/%s ( https://github.com/astraw/stdeb )'%stdeb.__version__
 
 def find_tar_gz(package_name, pypi_url = 'https://pypi.python.org/pypi',
-                verbose=0, release=None):
+                verbose=0, release=None, latest_release=False):
     transport = RequestsTransport()
     transport.user_agent = USER_AGENT
     if pypi_url.startswith('https://'):
@@ -45,11 +46,15 @@ def find_tar_gz(package_name, pypi_url = 'https://pypi.python.org/pypi',
         version = release
     else:
         default_releases = pypi.package_releases(package_name)
-        if len(default_releases)!=1:
+        if len(default_releases) > 1 and latest_release:
+            # Ensure versions are ordered
+            default_releases.sort( key=StrictVersion, reverse=True )
+        elif len(default_releases) != 1:
             raise RuntimeError('Expected one and only one release. '
                                'Non-hidden: %r. All: %r'%(
                 default_releases,all_releases))
         default_release = default_releases[0]
+        print(default_release)
         if verbose >= 2:
             myprint( 'found default release: %s' % (', '.join(default_releases),) )
 
@@ -85,10 +90,11 @@ def md5sum(filename):
     return d.hexdigest()
 
 def get_source_tarball(package_name,verbose=0,allow_unsafe_download=False,
-                       release=None):
+                       release=None,latest_release=False):
     download_url, expected_md5_digest = find_tar_gz(package_name,
                                                     verbose=verbose,
-                                                    release=release)
+                                                    release=release,
+                                                    latest_release=latest_release)
     if not download_url.startswith('https://'):
         if allow_unsafe_download:
             warnings.warn('downloading from unsafe url: %r' % download_url)
