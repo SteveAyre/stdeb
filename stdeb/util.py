@@ -455,17 +455,28 @@ def get_deb_depends_from_setuptools_requires(requirements, on_failure="warn"):
 
 def make_tarball(tarball_fname,directory,cwd=None):
     "create a tarball from a directory"
-    if tarball_fname.endswith('.gz'): opts = 'czf'
-    else: opts = 'cf'
+    if tarball_fname.endswith('.gz'):
+        opts = 'czf'
+    elif tarball_fname.endswith('.bz2'):
+        opts = 'cjf'
+    elif tarball_fname.endswith('.xz'):
+        opts = 'cJf'
+    else:
+        opts = 'cf'
     args = ['/bin/tar',opts,tarball_fname,directory]
     process_command(args, cwd=cwd)
 
 
 def expand_tarball(tarball_fname,cwd=None):
     "expand a tarball"
-    if tarball_fname.endswith('.gz'): opts = 'xzf'
-    elif tarball_fname.endswith('.bz2'): opts = 'xjf'
-    else: opts = 'xf'
+    if tarball_fname.endswith('.gz'):
+        opts = 'xzf'
+    elif tarball_fname.endswith('.bz2'):
+        opts = 'xjf'
+    elif tarball_fname.endswith('.xz'):
+        opts = 'xJf'
+    else:
+        opts = 'xf'
     args = ['/bin/tar',opts,tarball_fname]
     process_command(args, cwd=cwd)
 
@@ -498,9 +509,11 @@ def expand_sdist_file(sdist_file,cwd=None):
     lower_sdist_file = sdist_file.lower()
     if lower_sdist_file.endswith('.zip'):
         expand_zip(sdist_file,cwd=cwd)
+    elif lower_sdist_file.endswith('.tar.gz'):
+        expand_tarball(sdist_file,cwd=cwd)
     elif lower_sdist_file.endswith('.tar.bz2'):
         expand_tarball(sdist_file,cwd=cwd)
-    elif lower_sdist_file.endswith('.tar.gz'):
+    elif lower_sdist_file.endswith('.tar.xz'):
         expand_tarball(sdist_file,cwd=cwd)
     else:
         raise RuntimeError('could not guess format of original sdist file')

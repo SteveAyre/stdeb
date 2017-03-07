@@ -17,7 +17,7 @@ myprint=print
 
 USER_AGENT = 'pypi-install/%s ( https://github.com/astraw/stdeb )'%stdeb.__version__
 
-def find_tar_gz(package_name, pypi_url = 'https://pypi.python.org/pypi',
+def find_tarball(package_name, pypi_url = 'https://pypi.python.org/pypi',
                 verbose=0, release=None):
     transport = RequestsTransport()
     transport.user_agent = USER_AGENT
@@ -59,7 +59,7 @@ def find_tar_gz(package_name, pypi_url = 'https://pypi.python.org/pypi',
     for url in urls:
         if url['packagetype']=='sdist':
             assert url['python_version']=='source', 'how can an sdist not be a source?'
-            if url['url'].endswith('.tar.gz'):
+            if url['url'].endswith('.tar.gz') or url['url'].endswith('.tar.bz2') or url['url'].endswith('.tar.xz'):
                 download_url = url['url']
                 if 'md5_digest' in url:
                     expected_md5_digest = url['md5_digest']
@@ -86,9 +86,9 @@ def md5sum(filename):
 
 def get_source_tarball(package_name,verbose=0,allow_unsafe_download=False,
                        release=None):
-    download_url, expected_md5_digest = find_tar_gz(package_name,
-                                                    verbose=verbose,
-                                                    release=release)
+    download_url, expected_md5_digest = find_tarball(package_name,
+                                                     verbose=verbose,
+                                                     release=release)
     if not download_url.startswith('https://'):
         if allow_unsafe_download:
             warnings.warn('downloading from unsafe url: %r' % download_url)
@@ -111,12 +111,12 @@ def get_source_tarball(package_name,verbose=0,allow_unsafe_download=False,
     headers = {'User-Agent': USER_AGENT }
     r = requests.get(download_url, headers=headers)
     r.raise_for_status()
-    package_tar_gz = r.content
+    package_tarball = r.content
     if verbose >= 1:
-        myprint( 'done downloading %d bytes.' % ( len(package_tar_gz), ) )
+        myprint( 'done downloading %d bytes.' % ( len(package_tarball), ) )
     if expected_md5_digest is not None:
         m = hashlib.md5()
-        m.update(package_tar_gz)
+        m.update(package_tarball)
         actual_md5_digest = m.hexdigest()
         if verbose >= 2:
             myprint( 'md5:   actual %s\n     expected %s' % (actual_md5_digest,
@@ -127,6 +127,6 @@ def get_source_tarball(package_name,verbose=0,allow_unsafe_download=False,
         warnings.warn('no md5 digest found -- cannot verify source file')
 
     fd = open(fname,mode='wb')
-    fd.write( package_tar_gz )
+    fd.write( package_tarball )
     fd.close()
     return fname
